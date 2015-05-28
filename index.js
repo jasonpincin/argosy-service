@@ -1,6 +1,7 @@
 var cq       = require('concurrent-queue'),
     assign   = require('object-assign'),
     through2 = require('through2'),
+    filter   = require('through2-filter'),
     pipeline = require('stream-combiner2'),
     split    = require('split2'),
     join     = require('join-stream2'),
@@ -9,22 +10,23 @@ var cq       = require('concurrent-queue'),
 module.exports = function argosyService () {
     var implemented = [],
         input       = split(),
+        requests    = filter(function (chunk) { return JSON.parse(chunk).type === 'request' })
         output      = join('\n')
 
     var processMessage = through2(function parse(chunk, enc, cb) {
         var msg = JSON.parse(chunk)
-        queue(msg, function done (err, result) {
-            var headers = { type: 'response', client: msg._.client }
-            if (err) headers.error = { message: err.message }
-            cb(null, JSON.stringify(assign({}, result, { _: headers })))
+        queue(msg.body, function done (err, result) {
+            var reply = { type: 'response', headers: msg.headers, body: result }
+            if (err) reply.error = { message: err.message, stack: err.stack }
+            cb(null, JSON.stringify(reply))
         })
     })
 
-    var service = pipeline(input, processMessage, output)
+    var service = pipeline(input, requests, processMessage, output)
     service.message = function message (rules) {
         var impl = { pattern: pattern(rules), queue: cq() }
         implemented.push(impl)
-        output.push(JSON.stringify({ _: {type: 'notify-implemented'}, implemented: impl.pattern.encode() }))
+        output.push(JSON.stringify({type: 'notify-implemented', body: impl.pattern.encode() }))
         return impl.queue
     }
 
