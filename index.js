@@ -14,7 +14,7 @@ module.exports = function argosyService () {
     var processMessage = through2(function parse(chunk, enc, cb) {
         var msg = JSON.parse(chunk)
         queue(msg, function done (err, result) {
-            var headers = { type: 'response', cid: msg._.cid }
+            var headers = { type: 'response', client: msg._.client }
             if (err) headers.error = { message: err.message }
             cb(null, JSON.stringify(assign({}, result, { _: headers })))
         })

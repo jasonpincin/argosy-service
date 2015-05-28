@@ -10,12 +10,12 @@ test('message(pattern)', function (t) {
     var helloWorld = service.message({hello:'world'})
     t.ok(helloWorld.process, 'should return a queue')
 
-    var msg = { _: {cid:5}, hello:'world' }
+    var msg = { _: {client: {id:1, request:10}}, hello:'world' }
     service.write(JSON.stringify(msg)+'\n')
     service.on('data', function (chunk) {
         var result = JSON.parse(chunk)
         if (result._.type !== 'response') return
-        t.equal(result._.cid, 5, 'should produce a result with matching correlation id')
+        t.deepEqual(result._.client, {id:1, request:10}, 'should produce a result with matching client header')
         t.equal(result.hello, 'WORLD', 'result should be streamed after process calls callback')
     })
     helloWorld.process(function (_msg, cb) {
