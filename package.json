@@ -39,6 +39,7 @@
     "split2": "^0.2.1",
     "stream-combiner2": "^1.0.2",
     "through2": "^0.6.5",
-    "through2-filter": "^1.4.1"
+    "through2-filter": "^1.4.1",
+    "through2-objectify": "^0.1.1"
   }
 }

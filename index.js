@@ -1,31 +1,32 @@
-var cq       = require('concurrent-queue'),
-    assign   = require('object-assign'),
-    through2 = require('through2'),
-    filter   = require('through2-filter'),
-    pipeline = require('stream-combiner2'),
-    split    = require('split2'),
-    pattern  = require('argosy-pattern')
+var cq        = require('concurrent-queue'),
+    assign    = require('object-assign'),
+    through2  = require('through2'),
+    objectify = require('through2-objectify'),
+    filter    = require('through2-filter'),
+    pipeline  = require('stream-combiner2'),
+    split     = require('split2'),
+    pattern   = require('argosy-pattern')
 
 module.exports = function argosyService () {
     var implemented = [],
         input       = split(),
-        requests    = filter(function (chunk) { return JSON.parse(chunk).type === 'request' }),
-        output      = through2(function (chunk, enc, cb) { cb(null, chunk+'\n') })
+        parse       = objectify(function (chunk, enc, cb) { cb(null, JSON.parse(chunk)) }),
+        output      = objectify.deobj(function (msg, enc, cb) { cb(null, JSON.stringify(msg) + '\n') }),
+        requests    = filter.obj(function (msg) { return msg.type === 'request' })
 
-    var processMessage = through2(function parse(chunk, enc, cb) {
-        var msg = JSON.parse(chunk)
+    var processMessage = through2.obj(function parse(msg, enc, cb) {
         queue(msg.body, function done (err, result) {
             var reply = { type: 'response', headers: msg.headers, body: result }
             if (err) reply.error = { message: err.message, stack: err.stack }
-            cb(null, JSON.stringify(reply))
+            cb(null, reply)
         })
     })
 
-    var service = pipeline(input, requests, processMessage, output)
+    var service = pipeline(input, parse, requests, processMessage, output)
     service.message = function message (rules) {
         var impl = { pattern: pattern(rules), queue: cq() }
         implemented.push(impl)
-        output.write(JSON.stringify({type: 'notify-implemented', body: impl.pattern.encode() }))
+        output.write({type: 'notify-implemented', body: impl.pattern.encode() })
         return impl.queue
     }
 
