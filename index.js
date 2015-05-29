@@ -4,14 +4,13 @@ var cq       = require('concurrent-queue'),
     filter   = require('through2-filter'),
     pipeline = require('stream-combiner2'),
     split    = require('split2'),
-    join     = require('join-stream2'),
     pattern  = require('argosy-pattern')
 
 module.exports = function argosyService () {
     var implemented = [],
         input       = split(),
         requests    = filter(function (chunk) { return JSON.parse(chunk).type === 'request' })
-        output      = join('\n')
+        output      = through2(function (chunk, enc, cb) { cb(null, chunk+'\n') })
 
     var processMessage = through2(function parse(chunk, enc, cb) {
         var msg = JSON.parse(chunk)
@@ -26,12 +25,12 @@ module.exports = function argosyService () {
     service.message = function message (rules) {
         var impl = { pattern: pattern(rules), queue: cq() }
         implemented.push(impl)
-        output.push(JSON.stringify({type: 'notify-implemented', body: impl.pattern.encode() }))
+        output.write(JSON.stringify({type: 'notify-implemented', body: impl.pattern.encode() }))
         return impl.queue
     }
 
     // default message pattern implementations
-    service.message({argosy:'info'}).process(function onInfoRequest (msg, cb) {
+    service.message({argosy:'info'}).process(function onInfoRequest (msgBody, cb) {
         cb(null, {
             role: 'service',
             implemented: implemented.map(function implPatterns (impl) {
