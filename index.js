@@ -9,7 +9,7 @@ var cq       = require('concurrent-queue'),
 module.exports = function argosyService () {
     var implemented = [],
         input       = split(),
-        requests    = filter(function (chunk) { return JSON.parse(chunk).type === 'request' })
+        requests    = filter(function (chunk) { return JSON.parse(chunk).type === 'request' }),
         output      = through2(function (chunk, enc, cb) { cb(null, chunk+'\n') })
 
     var processMessage = through2(function parse(chunk, enc, cb) {
