@@ -55,16 +55,6 @@ match the `pattern` object provided (see [argosy-pattern](https://github.com/jas
 defining patterns). These messages should be processed and responded to using the `process` function of the `queue`. 
 Responses will be sent to the connected/requesting client.
 
-When a new message pattern for the service is defined, a `notify-implemented` message object will be emitted from the `service` 
-stream. This allows connected listers to be made aware of new message implementations. The structure of this message is:
-
-```
-{
-    type: 'notify-implemented',
-    body: 'encoded argosy pattern'
-}
-```
-
 It is advised not to match the key `argosy` as this is reserved for internal use. 
 
 
@@ -87,6 +77,39 @@ All services created will respond to messages that match `{argosy: 'info'}`. The
 
 The implemented array will contain encoded [argosy-pattern](https://github.com/jasonpincin/argosy-pattern)'s for which 
 the service will respond.
+
+
+## service stream messages
+
+### service response
+
+Outbound responses are structured like this:
+
+```
+{
+    type: 'response',
+    headers: { client: { id: 'uuid', seq: 0 } },
+    body: {},
+    error: { message: '', stack: '' }
+}
+```
+
+Where:
+* headers matches whatever headers object was supplied by the client to allow the client to correlate responses with requests on it's end
+* body contains the response from the service message implementation
+* error will be undefined unless an error occured in which case it will contain an object with the error message and stack
+
+### new service message implementation
+
+When a new message pattern for the service is defined, a `notify-implemented` message object will be emitted from the `service` 
+stream. This allows connected listers to be made aware of new message implementations. The structure of this message is:
+
+```
+{
+    type: 'notify-implemented',
+    body: 'encoded argosy pattern'
+}
+```
 
 ## testing
 
