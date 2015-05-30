@@ -13,6 +13,7 @@ Easily create micro-services.
 var service = require('argosy-service')(),
     match   = require('argosy-pattern/match'),
     client  = require('argosy-client')
+client.pipe(service).pipe(client)
 
 // create the service
 service.message({ greet: match.string }).process(function (msg, cb) {
