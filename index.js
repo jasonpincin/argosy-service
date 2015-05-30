@@ -18,8 +18,9 @@ module.exports = function argosyService () {
         queue(msg.body, function done (err, result) {
             var reply = { type: 'response', headers: msg.headers, body: result }
             if (err) reply.error = { message: err.message, stack: err.stack }
-            cb(null, reply)
+            processMessage.push(reply)
         })
+        cb()
     })
 
     var service = pipeline(input, parse, requests, processMessage, output)
