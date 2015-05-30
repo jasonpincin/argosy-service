@@ -10,12 +10,83 @@ Easily create micro-services.
 ## example
 
 ```javascript
-TODO
+var service = require('argosy-service')(),
+    match   = require('argosy-pattern/match'),
+    client  = require('argosy-client')
+
+// create the service
+service.message({ greet: match.string }).process(function (msg, cb) {
+    cb(null, 'Hello ' + msg.greet)
+})
+
+// use the service
+client.invoke({ greet: 'Jason' }, function (err, result) {
+    console.log(result)
+})
+```
+
+of with promises...
+
+```javascript
+// create the service
+service.message({ greet: match.string }).process(function (msg) {
+    return Promise.resolve('Hello ' + msg.greet)
+})
+
+// use the service
+client.invoke({ greet: 'Jason' }).then(console.log)
 ```
 
 ## api
 
-TODO
+```javascript
+var argosyService = require('argosy-service')
+```
+
+### service = argosyService()
+
+Create a new service object. The `service` object is a stream intended to be connected (piped) to Argosy clients 
+through any number of intermediary streams. 
+
+### queue = service.message(pattern)
+
+Create a [concurrent-queue](https://github.com/jasonpincin/concurrent-queue) that will be pushed messages that 
+match the `pattern` object provided (see [argosy-pattern](https://github.com/jasonpincin/argosy-pattern) for details on 
+defining patterns). These messages should be processed and responded to using the `process` function of the `queue`. 
+Responses will be sent to the connected/requesting client.
+
+When a new message pattern for the service is defined, a `notify-implemented` message object will be emitted from the `service` 
+stream. This allows connected listers to be made aware of new message implementations. The structure of this message is:
+
+```
+{
+    type: 'notify-implemented',
+    body: 'encoded argosy pattern'
+}
+```
+
+It is advised not to match the key `argosy` as this is reserved for internal use. 
+
+
+## default message handlers
+
+### {argosy: 'info'}
+
+All services created will respond to messages that match `{argosy: 'info'}`. The response payload will be:
+
+```
+{
+    role: 'service',
+    implemented: [
+        'encoded argosy pattern 1',
+        'encoded argosy pattern 2',
+        '...'
+    ]
+}
+```
+
+The implemented array will contain encoded [argosy-pattern](https://github.com/jasonpincin/argosy-pattern)'s for which 
+the service will respond.
 
 ## testing
 
