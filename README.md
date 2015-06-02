@@ -26,7 +26,7 @@ client.invoke({ greet: 'Jason' }, function (err, result) {
 })
 ```
 
-of with promises...
+or with promises...
 
 ```javascript
 // create the service
