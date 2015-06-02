@@ -59,7 +59,7 @@ Responses will be sent to the connected/requesting client.
 It is advised not to match the key `argosy` as this is reserved for internal use. 
 
 
-## default message handlers
+## built-in message handlers
 
 ### {argosy: 'info'}
 
@@ -82,9 +82,27 @@ the service will respond.
 
 ## service stream messages
 
+### service request
+
+Incoming requests are structured like so:
+
+```
+{
+    type: 'request',
+    headers: { client: { id: 'uuid', seq: 0 } },
+    body: {}
+}
+```
+
+Where:
+* headers can be anything you want to send, the service will send them back exactly as they were. This is useful for 
+  correlating responses with requests. The [argosy-client](https://github.com/jasonpincin/argosy-client) sends a client 
+  UUID and a request sequence number in the headers to correlate responses.
+* body contains the message that the service will match against
+
 ### service response
 
-Outbound responses are structured like this:
+Outbound responses are structured like so:
 
 ```
 {
