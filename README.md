@@ -7,6 +7,8 @@
 
 Easily create micro-services.
 
+Part of the [Argosy](https://github.com/jasonpincin/argosy) family. 
+
 ## example
 
 ```javascript
